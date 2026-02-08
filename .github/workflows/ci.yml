@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  UV_VERSION: "0.6.1"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.12-slim
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - &install_deps
+        name: Install dependencies
+        run: |
+          pip install uv==${{ env.UV_VERSION }}
+          uv sync
+
+      - name: Format check
+        run: uv run ruff format --check
+
+      - name: Lint check
+        run: uv run ruff check
+
+  test:
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.12-slim
+
+    steps:
+      - uses: actions/checkout@v4
+      - *install_deps
+
+      - name: Run tests
+        run: uv run pytest
